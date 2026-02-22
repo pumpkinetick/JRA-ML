@@ -38,7 +38,7 @@ class DataAnalyzer:
             'stable_region'
         ]
         self.ordinal_features = [
-            'track_cond_1'
+            'track_cond'
         ]
 
         self.feature_cols = (

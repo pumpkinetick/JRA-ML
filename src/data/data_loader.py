@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 
 from src.data.data_downloader import DataDownloader
@@ -23,6 +21,6 @@ class DataLoader:
             setattr(
                 self, file_name,
                 pd.read_csv(
-                    os.path.join(self.data_path, f'{file_name}.csv')
+                    self.data_path / f'{file_name}.csv'
                 )
             )
