@@ -27,7 +27,7 @@ class TrainingDataPreparer:
     @staticmethod
     def make_relevance(fp_array: np.ndarray,
                        group_sizes: np.ndarray
-                       ):
+                       ) -> np.ndarray:
         rel = np.zeros(len(fp_array), dtype=np.int32)
         idx = 0
         for size in group_sizes:
