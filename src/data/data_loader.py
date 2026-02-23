@@ -1,13 +1,13 @@
-import pandas as pd
+from pathlib import Path
 
-from src.data.data_downloader import DataDownloader
+import pandas as pd
 
 
 class DataLoader:
     def __init__(self,
-                 data_downloader: DataDownloader
+                 data_path: Path
                  ):
-        self.data_path = data_downloader.data_path
+        self.data_path = data_path
 
         self.corner_passing_orders = pd.DataFrame()
         self.laptimes = pd.DataFrame()

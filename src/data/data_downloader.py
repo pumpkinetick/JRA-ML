@@ -16,8 +16,6 @@ class DataDownloader:
         if self.data_path is None:
             self.data_path = PROJECT_PATH / 'data'
 
-        self.download_data()
-
     def download_data(self):
         gdown.download_folder(
             url=self.drive_link,
