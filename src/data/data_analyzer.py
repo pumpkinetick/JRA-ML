@@ -127,7 +127,7 @@ class DataAnalyzer:
         self.dataset = self.dataset.loc[:, ~self.dataset.columns.duplicated()].copy()
 
     def get_preprocessing_pipeline(self):
-        return ColumnTransformer(
+        column_transformer = ColumnTransformer(
             transformers=[
                 ('num', Pipeline([
                     ('impute', SimpleImputer(strategy='median')),
@@ -141,7 +141,7 @@ class DataAnalyzer:
 
                 ('cat', Pipeline([
                     ('impute', SimpleImputer(strategy='most_frequent')),
-                    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=True))
+                    ('ord', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1))
                 ]), self.categorical_features),
 
                 ('ord', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1),
@@ -151,3 +151,5 @@ class DataAnalyzer:
             ],
             remainder='drop'
         )
+        column_transformer.set_output(transform='pandas')
+        return column_transformer
