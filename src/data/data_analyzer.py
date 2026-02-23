@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -24,7 +25,6 @@ class DataAnalyzer:
             'pp',
             'age',
             'weight',
-            'win_odds',
             'horse_weight',
             'horse_weight_diff'
         ]
@@ -59,7 +59,7 @@ class DataAnalyzer:
         self.symbol_cols = [col for col in self.symbol_cols if col not in zero_importance_symbols]
 
         management_cols = ['race_id', 'race_date', 'horse_name', 'fp']
-        calculation_cols = ['jockey', 'trainer', 'owner']
+        calculation_cols = ['l3f', 'jockey', 'trainer', 'owner']
 
         all_cols = self.feature_cols + self.symbol_cols + management_cols + calculation_cols
         self.dataset = self.dataset[all_cols]
@@ -91,12 +91,17 @@ class DataAnalyzer:
             observed=True, sort=False
         )
 
-        self.new_cols['horse_avg_fp'] = (
-            horse_grouping['fp']
-            .rolling(window=n_races).mean()
-            .reset_index(level=0, drop=True)
-            .shift(1).values
-        )
+        def get_avg_horse_data(target_col: str
+                               ) -> np.ndarray:
+            return (
+                horse_grouping[target_col]
+                .rolling(window=n_races).mean()
+                .reset_index(level=0, drop=True)
+                .shift(1).values
+            )
+
+        self.new_cols['horse_avg_fp'] = get_avg_horse_data(target_col='fp')
+        self.new_cols['horse_avg_l3f'] = get_avg_horse_data(target_col='l3f')
         self.new_cols['days_since_last'] = (
             horse_grouping['race_date']
             .diff().dt.days
