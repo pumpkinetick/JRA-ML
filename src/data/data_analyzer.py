@@ -65,7 +65,7 @@ class DataAnalyzer:
         self.dataset = self.dataset[all_cols]
 
         self.new_cols = dict()
-        self.generate_historical_features(n_races=3, n_days=365)
+        self.generate_historical_features(n_races=5, n_days=365)
 
         self.dataset = self.dataset.drop(
             columns=calculation_cols
