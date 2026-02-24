@@ -21,7 +21,6 @@ class DataAnalyzer:
 
         self.numerical_features = [
             'distance',
-            'bk',
             'pp',
             'age',
             'weight',
