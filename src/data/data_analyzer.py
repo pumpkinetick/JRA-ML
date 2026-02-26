@@ -11,7 +11,12 @@ from src.data.data_translator import DataTranslator
 
 class DataAnalyzer:
     def __init__(self,
-                 data_translator: DataTranslator
+                 data_translator: DataTranslator,
+                 numerical_features: list,
+                 categorical_features: list,
+                 ordinal_features: list,
+                 n_races: int = 5,
+                 n_days: int = 180
                  ):
         self.dataset = DataTransformer.merge_data(data_translator=data_translator)
         self.dataset['race_date'] = pd.to_datetime(self.dataset['race_date'])
@@ -19,26 +24,9 @@ class DataAnalyzer:
         self.dataset.dropna(subset=['fp'], inplace=True)
         self.dataset['track_direction'] = self.dataset['track_direction'].fillna('Straight')
 
-        self.numerical_features = [
-            'distance',
-            'pp',
-            'age',
-            'weight',
-            'horse_weight',
-            'horse_weight_diff'
-        ]
-        self.categorical_features = [
-            'racecourse_name',
-            'race_cond',
-            'turf_or_dirt',
-            'track_direction',
-            'weather',
-            'sex',
-            'stable_region'
-        ]
-        self.ordinal_features = [
-            'track_cond'
-        ]
+        self.numerical_features = numerical_features
+        self.categorical_features = categorical_features
+        self.ordinal_features = ordinal_features
 
         self.feature_cols = (
             self.numerical_features +
@@ -53,7 +41,7 @@ class DataAnalyzer:
         self.dataset = self.dataset[all_cols]
 
         self.new_cols = dict()
-        self.generate_historical_features(n_races=5, n_days=365)
+        self.generate_historical_features(n_races=n_races, n_days=n_days)
 
         self.dataset = self.dataset.drop(
             columns=calculation_cols
