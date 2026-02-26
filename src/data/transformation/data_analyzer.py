@@ -5,8 +5,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
-from src.data.data_transformer import DataTransformer
-from src.data.data_translator import DataTranslator
+from data.preparation.data_translator import DataTranslator
+from data.transformation.data_transformer import DataTransformer
 
 
 class DataAnalyzer:

@@ -2,7 +2,7 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from src.training.model_trainer import ModelTrainer
+from training.model_trainer import ModelTrainer
 
 
 class Evaluator:
