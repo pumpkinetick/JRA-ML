@@ -10,47 +10,52 @@ class HistFeatureGenerator:
                                      ) -> dict:
         new_cols = dict()
 
-        is_winner_series = pd.Series((dataset['fp'] == 1) * 1)
-        horse_grouping = dataset.groupby(
-            by='horse_name',
-            observed=True, sort=False
-        )
+        df_temp = dataset[[
+            'horse_name', 'race_date', 'fp',
+            'l3f',
+            'horse_weight',
+            'turf_or_dirt',
+            'jockey',
+            'trainer',
+            'owner'
+        ]].copy()
+        df_temp['is_winner'] = (df_temp['fp'] == 1) * 1
+
+        horse_grouping = df_temp.groupby(by='horse_name', observed=True, sort=False)
 
         new_cols['horse_race_count'] = horse_grouping.cumcount()
-        new_cols['is_first_race'] = (new_cols['horse_race_count'] == 0) * 1
 
         for surface in ['Turf', 'Dirt']:
-            mask = (dataset['turf_or_dirt'] == surface)
-            surface_fp = dataset['fp'].where(mask)
             col_name = f'horse_avg_fp_{surface.lower()}'
-            new_cols[col_name] = (
-                surface_fp.groupby(by=dataset['horse_name'], observed=True, sort=False)
+
+            only_surface = df_temp[df_temp['turf_or_dirt'] == surface]
+            surface_stats = (
+                only_surface.groupby(by='horse_name', observed=True, sort=False)['fp']
                 .rolling(window=n_races, min_periods=1).mean()
-                .reset_index(level=0, drop=True).shift(1).values
+                .groupby(by='horse_name', observed=True, sort=False).shift(1)
+                .reset_index(level=0, drop=True)
+                .fillna(0.0)
             )
+
+            new_cols[col_name] = pd.Series(index=df_temp.index, data=np.nan)
+            new_cols[col_name].update(surface_stats)
+
+            new_cols[col_name] = new_cols[col_name].groupby(df_temp['horse_name']).ffill()
 
         def get_rel_rolling(target_col: str,
                             window: int
-                            ) -> np.ndarray:
+                            ) -> pd.Series:
             return (
                 horse_grouping[target_col]
                 .rolling(window=window, min_periods=1).mean()
                 .reset_index(level=0, drop=True)
-                .shift(1).values
+                .sort_index()
+                .shift(1)
             )
 
         new_cols['horse_avg_fp'] = get_rel_rolling(target_col='fp', window=n_races)
         new_cols['horse_avg_l3f'] = get_rel_rolling(target_col='l3f', window=n_races)
-
-        new_cols['horse_win_rate'] = (
-            is_winner_series.groupby(
-                by=dataset['horse_name'],
-                observed=True, sort=False
-            )
-            .rolling(window=n_races).mean()
-            .reset_index(level=0, drop=True)
-            .shift(1).values
-        )
+        new_cols['horse_win_rate'] = get_rel_rolling(target_col='is_winner', window=n_races)
 
         short_fp = get_rel_rolling(target_col='fp', window=-(n_races // -2))
         new_cols['horse_fp_momentum'] = new_cols['horse_avg_fp'] - short_fp
@@ -61,22 +66,20 @@ class HistFeatureGenerator:
         days_diff = pd.Series(horse_grouping['race_date'].diff().dt.days)
         new_cols['days_since_last'] = days_diff.fillna(999)
 
-        new_cols['is_layoff'] = (new_cols['days_since_last'] > 90) * 1
+        def calc_human_rate(group: pd.DataFrame
+                            ) -> pd.Series:
+            res = group.set_index('race_date')['is_winner'].rolling(
+                window=f'{n_days}D', closed='left'
+            ).mean()
+            res.index = group.index
+            return res
 
         for col in ['jockey', 'trainer', 'owner']:
-            temp = dataset[[col, 'race_date']].copy()
-            temp['is_winner'] = is_winner_series.values
-
             new_cols[f'{col}_win_rate'] = (
-                temp.groupby(
-                    by=col,
-                    observed=True, sort=False
-                )
-                .rolling(
-                    on='race_date', window=f'{n_days}D', closed='left'
-                )['is_winner'].mean()
-                .reset_index(level=0, drop=True)
-                .values
+                df_temp.groupby(col, observed=True, sort=False, group_keys=False)
+                .apply(calc_human_rate)
+                .sort_index()
+                .fillna(0.0)
             )
 
         return new_cols

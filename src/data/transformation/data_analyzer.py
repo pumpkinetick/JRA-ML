@@ -23,6 +23,7 @@ class DataAnalyzer:
         self.dataset = self.dataset.sort_values(by=['race_date', 'race_id', 'pp'], kind='mergesort')
         self.dataset.dropna(subset=['fp'], inplace=True)
         self.dataset['track_direction'] = self.dataset['track_direction'].fillna('Straight')
+        self.dataset.reset_index(drop=True, inplace=True)
 
         self.numerical_features = numerical_features
         self.categorical_features = categorical_features
@@ -50,9 +51,6 @@ class DataAnalyzer:
             ], axis=1
         ).copy()
         self.dataset = self.dataset.loc[:, ~self.dataset.columns.duplicated()].copy()
-        self.dataset = self.dataset.drop(
-            columns=calculation_cols
-        )
 
         self.pipeline = self.get_preprocessing_pipeline()
 
