@@ -46,21 +46,10 @@ class DataAnalyzer:
             self.ordinal_features
         )
 
-        self.symbol_cols = [col for col in self.dataset.columns if col.startswith('symbol_')]
-        zero_importance_symbols = [
-            'symbol_market_bought',
-            'symbol_kanto_distributed',
-            'symbol_kansai_distributed',
-            'symbol_male_only',
-            'symbol_gelding_only',
-            'symbol_kyushu_bred'
-        ]
-        self.symbol_cols = [col for col in self.symbol_cols if col not in zero_importance_symbols]
-
         management_cols = ['race_id', 'race_date', 'horse_name', 'fp']
         calculation_cols = ['l3f', 'jockey', 'trainer', 'owner']
 
-        all_cols = self.feature_cols + self.symbol_cols + management_cols + calculation_cols
+        all_cols = self.feature_cols + management_cols + calculation_cols
         self.dataset = self.dataset[all_cols]
 
         self.new_cols = dict()
@@ -149,9 +138,7 @@ class DataAnalyzer:
                 ]), self.categorical_features),
 
                 ('ord', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1),
-                 self.ordinal_features),
-
-                ('pass', 'passthrough', self.symbol_cols)
+                 self.ordinal_features)
             ],
             remainder='drop'
         )
