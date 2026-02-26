@@ -79,6 +79,20 @@ class DataAnalyzer:
             observed=True, sort=False
         )
 
+        self.new_cols['horse_race_count'] = (
+            horse_grouping.cumcount()
+        )
+
+        for surface in ['Turf', 'Dirt']:
+            mask = (self.dataset['turf_or_dirt'] == surface)
+            surface_fp = self.dataset['fp'].where(mask)
+            col_name = f'horse_avg_fp_{surface.lower()}'
+            self.new_cols[col_name] = (
+                surface_fp.groupby(by=self.dataset['horse_name'], observed=True, sort=False)
+                .rolling(window=n_races, min_periods=1).mean()
+                .reset_index(level=0, drop=True).shift(1).values
+            )
+
         def get_avg_horse_data(target_col: str
                                ) -> np.ndarray:
             return (
