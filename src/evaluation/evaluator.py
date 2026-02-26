@@ -2,13 +2,16 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
+from evaluation.roi_calculator import ROICalculator
 from training.model_trainer import ModelTrainer
 
 
 class Evaluator:
     def __init__(self,
                  model_trainer: ModelTrainer,
-                 model: lgb.LGBMRanker
+                 model: lgb.LGBMRanker,
+                 test_df: pd.DataFrame,
+                 conf_margin: float = 0.8
                  ):
         self.model_trainer = model_trainer
         self.model = model
@@ -23,11 +26,17 @@ class Evaluator:
             groups=self.model_trainer.test_groups
         )
 
+        self.race_data_split = self.split_by_group(
+            arr=test_df.to_dict('records'),
+            groups=self.model_trainer.test_groups
+        )
+
         self.print_score()
+        self.print_roi(conf_margin=conf_margin)
         self.print_importance()
 
     @staticmethod
-    def split_by_group(arr: np.ndarray,
+    def split_by_group(arr: list | np.ndarray,
                        groups: np.ndarray
                        ) -> list:
         splits = list()
@@ -38,6 +47,7 @@ class Evaluator:
         return splits
 
     def print_score(self):
+        print('=== Ranking Performance ===')
         for k in [1, 3, 5]:
             score = self.ndcg_at_k(
                 y_true_groups=self.y_true_split,
@@ -55,7 +65,22 @@ class Evaluator:
             f'({100*winner_accuracy/len(self.model_trainer.test_groups):.1f}%)\n'
         )
 
+    def print_roi(self,
+                  conf_margin: float
+                  ):
+        print('=== Betting Simulation ===')
+        ROICalculator.calculate_flat_bet_roi(
+            y_pred_split=self.y_pred_split,
+            race_data_split=self.race_data_split
+        )
+        ROICalculator.calculate_confidence_roi(
+            y_pred_split=self.y_pred_split,
+            race_data_split=self.race_data_split,
+            conf_margin=conf_margin
+        )
+
     def print_importance(self):
+        print('=== Feature Importances ===')
         feature_names = self.model_trainer.pipeline.get_feature_names_out()
         importance_df = pd.DataFrame({
             'feature': feature_names,

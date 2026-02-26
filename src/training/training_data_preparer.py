@@ -13,10 +13,12 @@ class TrainingDataPreparer:
         self.pipeline = data_analyzer.pipeline
         self.split_date = pd.to_datetime(split_date)
 
+        self.train_df = pd.DataFrame()
         self.X_train = pd.DataFrame()
         self.y_train = np.ndarray((0, 0))
         self.train_groups = np.ndarray((0, 0))
 
+        self.test_df = pd.DataFrame()
         self.X_test = pd.DataFrame()
         self.y_test = np.ndarray((0, 0))
         self.test_groups = np.ndarray((0, 0))
@@ -42,21 +44,21 @@ class TrainingDataPreparer:
         return rel
 
     def prepare_training_data(self):
-        train_df = self.dataset[self.dataset['race_date'] < self.split_date]
+        self.train_df = self.dataset[self.dataset['race_date'] < self.split_date]
 
-        self.train_groups = train_df.groupby('race_id', sort=True).size().values
+        self.train_groups = self.train_df.groupby(by='race_id', sort=True).size().values
 
-        self.X_train = self.pipeline.fit_transform(train_df)
+        self.X_train = self.pipeline.fit_transform(self.train_df)
         self.y_train = self.make_relevance(
-            fp_array=train_df['fp'].values, group_sizes=self.train_groups
+            fp_array=self.train_df['fp'].values, group_sizes=self.train_groups
         )
 
     def prepare_test_data(self):
-        test_df = self.dataset[self.dataset['race_date'] >= self.split_date]
+        self.test_df = self.dataset[self.dataset['race_date'] >= self.split_date]
 
-        self.test_groups = test_df.groupby('race_id', sort=True).size().values
+        self.test_groups = self.test_df.groupby(by='race_id', sort=True).size().values
 
-        self.X_test = self.pipeline.transform(test_df)
+        self.X_test = self.pipeline.transform(self.test_df)
         self.y_test = self.make_relevance(
-            fp_array=test_df['fp'].values, group_sizes=self.test_groups
+            fp_array=self.test_df['fp'].values, group_sizes=self.test_groups
         )

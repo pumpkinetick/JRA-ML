@@ -34,7 +34,7 @@ class DataAnalyzer:
             self.ordinal_features
         )
 
-        management_cols = ['race_id', 'race_date', 'horse_name', 'fp']
+        management_cols = ['race_id', 'race_date', 'horse_name', 'fp', 'win_odds']
         calculation_cols = ['l3f', 'jockey', 'trainer', 'owner']
 
         all_cols = self.feature_cols + management_cols + calculation_cols
