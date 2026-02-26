@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -7,6 +6,7 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from src.data.preparation.data_translator import DataTranslator
 from src.data.transformation.data_transformer import DataTransformer
+from src.data.transformation.hist_feature_generator import HistFeatureGenerator
 
 
 class DataAnalyzer:
@@ -40,82 +40,9 @@ class DataAnalyzer:
         all_cols = self.feature_cols + management_cols + calculation_cols
         self.dataset = self.dataset[all_cols]
 
-        self.new_cols = dict()
-        self.generate_historical_features(n_races=n_races, n_days=n_days)
-
-        self.dataset = self.dataset.drop(
-            columns=calculation_cols
+        self.new_cols = HistFeatureGenerator.generate_historical_features(
+            dataset=self.dataset, n_races=n_races, n_days=n_days
         )
-
-        self.pipeline = self.get_preprocessing_pipeline()
-
-    def generate_historical_features(self,
-                                     n_races: int,
-                                     n_days: int
-                                     ):
-        is_winner_series = pd.Series((self.dataset['fp'] == 1) * 1)
-
-        self.new_cols['horse_win_rate'] = (
-            is_winner_series.groupby(
-                by=self.dataset['horse_name'],
-                observed=True, sort=False
-            )
-            .rolling(window=n_races).mean()
-            .reset_index(level=0, drop=True)
-            .shift(1).values
-        )
-
-        horse_grouping = self.dataset.groupby(
-            by='horse_name',
-            observed=True, sort=False
-        )
-
-        self.new_cols['horse_race_count'] = (
-            horse_grouping.cumcount()
-        )
-
-        for surface in ['Turf', 'Dirt']:
-            mask = (self.dataset['turf_or_dirt'] == surface)
-            surface_fp = self.dataset['fp'].where(mask)
-            col_name = f'horse_avg_fp_{surface.lower()}'
-            self.new_cols[col_name] = (
-                surface_fp.groupby(by=self.dataset['horse_name'], observed=True, sort=False)
-                .rolling(window=n_races, min_periods=1).mean()
-                .reset_index(level=0, drop=True).shift(1).values
-            )
-
-        def get_avg_horse_data(target_col: str
-                               ) -> np.ndarray:
-            return (
-                horse_grouping[target_col]
-                .rolling(window=n_races).mean()
-                .reset_index(level=0, drop=True)
-                .shift(1).values
-            )
-
-        self.new_cols['horse_avg_fp'] = get_avg_horse_data(target_col='fp')
-        self.new_cols['horse_avg_l3f'] = get_avg_horse_data(target_col='l3f')
-        self.new_cols['days_since_last'] = (
-            horse_grouping['race_date']
-            .diff().dt.days
-        )
-
-        for col in ['jockey', 'trainer', 'owner']:
-            temp = self.dataset[[col, 'race_date']].copy()
-            temp['is_winner'] = is_winner_series.values
-
-            self.new_cols[f'{col}_win_rate'] = (
-                temp.groupby(
-                    by=col,
-                    observed=True, sort=False
-                )
-                .rolling(
-                    on='race_date', window=f'{n_days}D', closed='left'
-                )['is_winner'].mean()
-                .reset_index(level=0, drop=True)
-                .values
-            )
-
         self.dataset = pd.concat(
             objs=[
                 self.dataset,
@@ -123,6 +50,11 @@ class DataAnalyzer:
             ], axis=1
         ).copy()
         self.dataset = self.dataset.loc[:, ~self.dataset.columns.duplicated()].copy()
+        self.dataset = self.dataset.drop(
+            columns=calculation_cols
+        )
+
+        self.pipeline = self.get_preprocessing_pipeline()
 
     def get_preprocessing_pipeline(self):
         column_transformer = ColumnTransformer(
