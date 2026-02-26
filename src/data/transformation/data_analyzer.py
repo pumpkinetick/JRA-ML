@@ -49,7 +49,10 @@ class DataAnalyzer:
 
         self.pipeline = self.get_preprocessing_pipeline()
 
-    def generate_historical_features(self, n_races: int, n_days: int):
+    def generate_historical_features(self,
+                                     n_races: int,
+                                     n_days: int
+                                     ):
         is_winner_series = pd.Series((self.dataset['fp'] == 1) * 1)
 
         self.new_cols['horse_win_rate'] = (
