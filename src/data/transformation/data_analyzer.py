@@ -29,21 +29,26 @@ class DataAnalyzer:
         self.categorical_features = categorical_features
         self.ordinal_features = ordinal_features
 
-        self.feature_cols = (
+        calculation_cols = [
+            'race_date', 'horse_name', 'horse_weight', 'turf_or_dirt',
+            'fp', 'l3f', 'jockey', 'trainer', 'owner'
+        ]
+
+        self.new_cols = HistFeatureGenerator.generate_historical_features(
+            dataset=self.dataset[calculation_cols],
+            n_races=n_races, n_days=n_days
+        )
+
+        feature_cols = (
             self.numerical_features +
             self.categorical_features +
             self.ordinal_features
         )
+        managed_cols = [
+            'race_id', 'race_date', 'fp', 'win_odds'
+        ]
+        self.dataset = self.dataset[feature_cols + managed_cols]
 
-        management_cols = ['race_id', 'race_date', 'horse_name', 'fp', 'win_odds']
-        calculation_cols = ['l3f', 'jockey', 'trainer', 'owner']
-
-        all_cols = self.feature_cols + management_cols + calculation_cols
-        self.dataset = self.dataset[all_cols]
-
-        self.new_cols = HistFeatureGenerator.generate_historical_features(
-            dataset=self.dataset, n_races=n_races, n_days=n_days
-        )
         self.dataset = pd.concat(
             objs=[
                 self.dataset,

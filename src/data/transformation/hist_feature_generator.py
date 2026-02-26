@@ -10,15 +10,7 @@ class HistFeatureGenerator:
                                      ) -> dict:
         new_cols = dict()
 
-        df_temp = dataset[[
-            'horse_name', 'race_date', 'fp',
-            'l3f',
-            'horse_weight',
-            'turf_or_dirt',
-            'jockey',
-            'trainer',
-            'owner'
-        ]].copy()
+        df_temp = dataset.copy()
         df_temp['is_winner'] = (df_temp['fp'] == 1) * 1
 
         horse_grouping = df_temp.groupby(by='horse_name', observed=True, sort=False)
