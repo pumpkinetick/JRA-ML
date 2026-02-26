@@ -1,6 +1,6 @@
 import pandas as pd
 
-from data.preparation.data_translator import DataTranslator
+from src.data.preparation.data_translator import DataTranslator
 
 
 class DataTransformer:

@@ -1,6 +1,6 @@
 import lightgbm as lgb
 
-from training.training_data_preparer import TrainingDataPreparer
+from src.training.training_data_preparer import TrainingDataPreparer
 
 
 class ModelTrainer:

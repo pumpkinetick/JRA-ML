@@ -2,8 +2,8 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from evaluation.roi_calculator import ROICalculator
-from training.model_trainer import ModelTrainer
+from src.evaluation.roi_calculator import ROICalculator
+from src.training.model_trainer import ModelTrainer
 
 
 class Evaluator:

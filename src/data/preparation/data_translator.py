@@ -1,5 +1,5 @@
-from data.preparation.data_loader import DataLoader
-from data.utilities import load_from_json
+from src.data.preparation.data_loader import DataLoader
+from src.data.utilities import load_from_json
 
 
 class DataTranslator:

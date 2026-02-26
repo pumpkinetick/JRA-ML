@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from data.transformation.data_analyzer import DataAnalyzer
+from src.data.transformation.data_analyzer import DataAnalyzer
 
 
 class TrainingDataPreparer:
