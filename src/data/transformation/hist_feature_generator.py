@@ -26,7 +26,7 @@ class HistFeatureGenerator:
                 .rolling(window=n_races, min_periods=1).mean()
                 .groupby(by='horse_name', observed=True, sort=False).shift(1)
                 .reset_index(level=0, drop=True)
-                .fillna(0.0)
+                .sort_index()
             )
 
             new_cols[col_name] = pd.Series(index=df_temp.index, data=np.nan)
@@ -40,9 +40,9 @@ class HistFeatureGenerator:
             return (
                 horse_grouping[target_col]
                 .rolling(window=window, min_periods=1).mean()
+                .groupby(by='horse_name', observed=True, sort=False).shift(1)
                 .reset_index(level=0, drop=True)
                 .sort_index()
-                .shift(1)
             )
 
         new_cols['horse_avg_fp'] = get_rel_rolling(target_col='fp', window=n_races)

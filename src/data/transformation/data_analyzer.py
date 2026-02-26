@@ -39,16 +39,6 @@ class DataAnalyzer:
             n_races=n_races, n_days=n_days
         )
 
-        feature_cols = (
-            self.numerical_features +
-            self.categorical_features +
-            self.ordinal_features
-        )
-        managed_cols = [
-            'race_id', 'race_date', 'fp', 'win_odds'
-        ]
-        self.dataset = self.dataset[feature_cols + managed_cols]
-
         self.dataset = pd.concat(
             objs=[
                 self.dataset,
