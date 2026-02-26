@@ -49,6 +49,5 @@ class ROICalculator:
             print('No bets met the confidence threshold.\n')
 
         roi = (total_payout / total_bets) * 100
-        print(f'--- Confidence Strategy (Margin > {conf_margin}) ---')
         print(f'Total Bets: {total_bets} (out of {len(race_data_split)} races)')
         print(f'Total Payout: {total_payout:.2f} | ROI: {roi:.2f}%\n')
