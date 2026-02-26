@@ -16,9 +16,8 @@ class HistFeatureGenerator:
             observed=True, sort=False
         )
 
-        new_cols['horse_race_count'] = (
-            horse_grouping.cumcount()
-        )
+        new_cols['horse_race_count'] = horse_grouping.cumcount()
+        new_cols['is_first_race'] = (new_cols['horse_race_count'] == 0) * 1
 
         for surface in ['Turf', 'Dirt']:
             mask = (dataset['turf_or_dirt'] == surface)
@@ -30,22 +29,18 @@ class HistFeatureGenerator:
                 .reset_index(level=0, drop=True).shift(1).values
             )
 
-        def get_avg_horse_data(target_col: str
-                               ) -> np.ndarray:
+        def get_rel_rolling(target_col: str,
+                            window: int
+                            ) -> np.ndarray:
             return (
                 horse_grouping[target_col]
-                .rolling(window=n_races).mean()
+                .rolling(window=window, min_periods=1).mean()
                 .reset_index(level=0, drop=True)
                 .shift(1).values
             )
 
-        new_cols['horse_avg_fp'] = get_avg_horse_data(target_col='fp')
-        new_cols['horse_avg_l3f'] = get_avg_horse_data(target_col='l3f')
-
-        new_cols['days_since_last'] = (
-            horse_grouping['race_date']
-            .diff().dt.days
-        )
+        new_cols['horse_avg_fp'] = get_rel_rolling(target_col='fp', window=n_races)
+        new_cols['horse_avg_l3f'] = get_rel_rolling(target_col='l3f', window=n_races)
 
         new_cols['horse_win_rate'] = (
             is_winner_series.groupby(
@@ -56,6 +51,18 @@ class HistFeatureGenerator:
             .reset_index(level=0, drop=True)
             .shift(1).values
         )
+
+        short_fp = get_rel_rolling(target_col='fp', window=-(n_races // -2))
+        new_cols['horse_fp_momentum'] = new_cols['horse_avg_fp'] - short_fp
+
+        avg_weight = get_rel_rolling(target_col='horse_weight', window=n_races * 2)
+        new_cols['horse_weight_dev_avg'] = dataset['horse_weight'] - avg_weight
+
+        days_diff = pd.Series(horse_grouping['race_date'].diff().dt.days)
+        new_cols['days_since_last'] = days_diff.fillna(999)
+
+        new_cols['is_layoff'] = (new_cols['days_since_last'] > 90) * 1
+
         for col in ['jockey', 'trainer', 'owner']:
             temp = dataset[[col, 'race_date']].copy()
             temp['is_winner'] = is_winner_series.values
