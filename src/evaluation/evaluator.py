@@ -13,22 +13,24 @@ class Evaluator:
                  test_df: pd.DataFrame,
                  conf_margin: float = 0.8
                  ):
-        self.model_trainer = model_trainer
         self.model = model
+        self.test_groups = model_trainer.test_groups
+        self.pipeline = model_trainer.pipeline
 
-        test_scores = self.model.predict(X=self.model_trainer.X_test)
+        test_scores = self.model.predict(X=model_trainer.X_test)
+
         self.y_true_split = self.split_by_group(
-            arr=self.model_trainer.y_test,
-            groups=self.model_trainer.test_groups
+            arr=model_trainer.y_test,
+            groups=self.test_groups
         )
         self.y_pred_split = self.split_by_group(
             arr=test_scores,
-            groups=self.model_trainer.test_groups
+            groups=self.test_groups
         )
 
         self.race_data_split = self.split_by_group(
             arr=test_df.to_dict('records'),
-            groups=self.model_trainer.test_groups
+            groups=self.test_groups
         )
 
         self.print_score()
@@ -61,8 +63,8 @@ class Evaluator:
             for y_true, y_pred in zip(self.y_true_split, self.y_pred_split)
         )
         print(
-            f'Winner correctly predicted: {winner_accuracy}/{len(self.model_trainer.test_groups)} '
-            f'({100*winner_accuracy/len(self.model_trainer.test_groups):.1f}%)\n'
+            f'Winner correctly predicted: {winner_accuracy}/{len(self.test_groups)} '
+            f'({100*winner_accuracy/len(self.test_groups):.1f}%)\n'
         )
 
     def print_roi(self,
@@ -81,7 +83,7 @@ class Evaluator:
 
     def print_importance(self):
         print('=== Feature Importances ===')
-        feature_names = self.model_trainer.pipeline.get_feature_names_out()
+        feature_names = self.pipeline.get_feature_names_out()
         importance_df = pd.DataFrame({
             'feature': feature_names,
             'importance': self.model.feature_importances_
