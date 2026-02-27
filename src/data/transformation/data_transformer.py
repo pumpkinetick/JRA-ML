@@ -41,33 +41,29 @@ class DataTransformer:
 
         def get_class(cond: str
                       ) -> str:
-            if any(g in cond for g in ['G1', 'G2', 'G3', 'Open', 'L']):
-                return 'Open'
-            if '16M' in cond or '3-win' in cond:
-                return '3-win'
-            if '10M' in cond or '2-win' in cond:
-                return '2-win'
-            if '5M' in cond or '1-win' in cond:
-                return '1-win'
-            if 'Maiden' in cond:
-                return 'Maiden'
             if 'Newcomer' in cond:
                 return 'Newcomer'
+            if 'Maiden' in cond:
+                return 'Maiden'
+            for wins in [1, 2, 3]:
+                if f'{wins}-win' in cond:
+                    return f'{wins}-win'
+            if 'Under ' in cond:
+                return cond.split('Under ')[1]
+            if 'Open' in cond:
+                return 'Open'
             return 'Other'
 
         def get_age_limit(cond: str
                           ) -> str:
-            if '2yo' in cond:
-                return '2yo'
-            if '3yo' in cond and '+' not in cond:
-                return '3yo'
-            if '3yo+' in cond:
-                return '3yo_up'
-            if '4yo+' in cond:
-                return '4yo_up'
-            return 'Mixed'
+            for age in [2, 3, 4, 5]:
+                if f'{age}yo' in cond and '+' not in cond:
+                    return f'{age}yo'
+                if f'{age}yo+' in cond:
+                    return f'{age}yo_up'
+            return 'Other'
 
-        new_cols['race_class_rank'] = self.dataset['race_cond'].apply(get_class)
+        new_cols['race_class'] = self.dataset['race_cond'].apply(get_class)
         new_cols['race_age_limit'] = self.dataset['race_cond'].apply(get_age_limit)
 
         self.dataset.drop(columns=['race_cond'], inplace=True)
