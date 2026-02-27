@@ -1,8 +1,4 @@
 import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from src.data.transformation.hist_feature_generator import HistFeatureGenerator
 
@@ -10,66 +6,34 @@ from src.data.transformation.hist_feature_generator import HistFeatureGenerator
 class DataAnalyzer:
     def __init__(self,
                  dataset: pd.DataFrame,
-                 numerical_features: list,
-                 categorical_features: list,
-                 ordinal_features: list,
-                 ordinal_categories: list,
                  n_races: int = 5,
                  n_days: int = 180
                  ):
         self.dataset = dataset
 
-        self.numerical_features = numerical_features
-        self.categorical_features = categorical_features
-        self.ordinal_features = ordinal_features
-
-        self.ordinal_categories = ordinal_categories
-
-        calculation_cols = [
-            'race_date', 'horse_name', 'horse_weight', 'turf_or_dirt',
-            'fp', 'l3f', 'jockey', 'trainer', 'owner'
-        ]
-
-        self.new_cols = HistFeatureGenerator.generate_historical_features(
-            dataset=self.dataset[calculation_cols],
+        new_cols = self.get_historical_features(
             n_races=n_races, n_days=n_days
         )
 
         self.dataset = pd.concat(
             objs=[
                 self.dataset,
-                pd.DataFrame(self.new_cols)
+                pd.DataFrame(new_cols)
             ], axis=1
         ).copy()
         self.dataset = self.dataset.loc[:, ~self.dataset.columns.duplicated()].copy()
 
-        self.pipeline = self.get_preprocessing_pipeline()
+        self.historical_features = list(new_cols.keys())
 
-    def get_preprocessing_pipeline(self):
-        column_transformer = ColumnTransformer(
-            transformers=[
-                ('num', Pipeline([
-                    ('impute', SimpleImputer(strategy='median')),
-                    ('scale', StandardScaler())
-                ]), self.numerical_features),
-
-                ('hist', Pipeline([
-                    ('impute', SimpleImputer(strategy='constant', fill_value=-1)),
-                    ('scale', StandardScaler())
-                ]), list(self.new_cols.keys())),
-
-                ('cat', Pipeline([
-                    ('impute', SimpleImputer(strategy='most_frequent')),
-                    ('ord', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1))
-                ]), self.categorical_features),
-
-                ('ord', OrdinalEncoder(
-                    categories=self.ordinal_categories,
-                    handle_unknown='use_encoded_value',
-                    unknown_value=-1
-                ), self.ordinal_features)
-            ],
-            remainder='drop'
+    def get_historical_features(self,
+                                n_races: int,
+                                n_days: int
+                                ):
+        calculation_cols = [
+            'race_date', 'horse_name', 'horse_weight', 'turf_or_dirt',
+            'fp', 'l3f', 'jockey', 'trainer', 'owner'
+        ]
+        return HistFeatureGenerator.generate_historical_features(
+            dataset=self.dataset[calculation_cols],
+            n_races=n_races, n_days=n_days
         )
-        column_transformer.set_output(transform='pandas')
-        return column_transformer
