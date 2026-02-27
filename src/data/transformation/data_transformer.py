@@ -10,6 +10,7 @@ class DataTransformer:
         self.dataset = self.merge_data(data_translator=data_translator)
 
         self.clean_dataset()
+        self.parse_race_cond()
 
     @staticmethod
     def merge_data(data_translator: DataTranslator
@@ -34,3 +35,52 @@ class DataTransformer:
         self.dataset.dropna(subset=['fp'], inplace=True)
         self.dataset['track_direction'] = self.dataset['track_direction'].fillna('Straight')
         self.dataset.reset_index(drop=True, inplace=True)
+
+    def parse_race_cond(self):
+        new_cols = dict()
+
+        def get_class(cond: str
+                      ) -> str:
+            if any(g in cond for g in ['G1', 'G2', 'G3', 'Open', 'L']):
+                return 'Open'
+            if '16M' in cond or '3-win' in cond:
+                return '3-win'
+            if '10M' in cond or '2-win' in cond:
+                return '2-win'
+            if '5M' in cond or '1-win' in cond:
+                return '1-win'
+            if 'Maiden' in cond:
+                return 'Maiden'
+            if 'Newcomer' in cond:
+                return 'Newcomer'
+            return 'Other'
+
+        def get_age_limit(cond: str
+                          ) -> str:
+            if '2yo' in cond:
+                return '2yo'
+            if '3yo' in cond and '+' not in cond:
+                return '3yo'
+            if '3yo+' in cond:
+                return '3yo_up'
+            if '4yo+' in cond:
+                return '4yo_up'
+            return 'Mixed'
+
+        class_map = {
+            'Newcomer': 0, 'Maiden': 1,
+            '1-win': 2, '2-win': 3, '3-win': 4,
+            'Open': 5, 'Other': 2
+        }
+        new_cols['race_class_rank'] = self.dataset['race_cond'].apply(get_class).map(class_map)
+
+        new_cols['race_age_limit'] = self.dataset['race_cond'].apply(get_age_limit)
+
+        self.dataset.drop(columns=['race_cond'], inplace=True)
+        self.dataset = pd.concat(
+            objs=[
+                self.dataset,
+                pd.DataFrame(new_cols)
+            ], axis=1
+        ).copy()
+        self.dataset = self.dataset.loc[:, ~self.dataset.columns.duplicated()].copy()
