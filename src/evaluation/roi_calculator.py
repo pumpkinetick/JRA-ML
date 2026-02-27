@@ -20,7 +20,7 @@ class ROICalculator:
         roi = (total_payout / total_races) * 100
         print(f'--- Flat Betting Strategy (#1 Pick) ---')
         print(f'Total Bets: {total_races} | Wins: {wins}')
-        print(f'Total Payout: {total_payout:.2f} | ROI: {roi:.2f}%')
+        print(f'Total Payout: {total_payout:.1f} | ROI: {roi:.2f}%')
         print(f'Win Rate: {(wins / total_races) * 100:.2f}%\n')
 
     @staticmethod
@@ -50,4 +50,4 @@ class ROICalculator:
 
         roi = (total_payout / total_bets) * 100
         print(f'Total Bets: {total_bets} (out of {len(race_data_split)} races)')
-        print(f'Total Payout: {total_payout:.2f} | ROI: {roi:.2f}%\n')
+        print(f'Total Payout: {total_payout:.1f} | ROI: {roi:.2f}%\n')

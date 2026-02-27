@@ -50,7 +50,7 @@ class HistFeatureGenerator:
         new_cols['horse_win_rate'] = get_rel_rolling(target_col='is_winner', window=n_races)
 
         short_fp = get_rel_rolling(target_col='fp', window=-(n_races // -2))
-        new_cols['horse_fp_momentum'] = new_cols['horse_avg_fp'] - short_fp
+        new_cols['horse_fp_momentum'] = short_fp - new_cols['horse_avg_fp']
 
         avg_weight = get_rel_rolling(target_col='horse_weight', window=n_races * 2)
         new_cols['horse_weight_dev_avg'] = dataset['horse_weight'] - avg_weight
@@ -71,7 +71,6 @@ class HistFeatureGenerator:
                 df_temp.groupby(col, observed=True, sort=False, group_keys=False)
                 .apply(calc_human_rate)
                 .sort_index()
-                .fillna(0.0)
             )
 
         return new_cols
