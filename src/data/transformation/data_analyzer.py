@@ -4,26 +4,19 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
-from src.data.preparation.data_translator import DataTranslator
-from src.data.transformation.data_transformer import DataTransformer
 from src.data.transformation.hist_feature_generator import HistFeatureGenerator
 
 
 class DataAnalyzer:
     def __init__(self,
-                 data_translator: DataTranslator,
+                 dataset: pd.DataFrame,
                  numerical_features: list,
                  categorical_features: list,
                  ordinal_features: list,
                  n_races: int = 5,
                  n_days: int = 180
                  ):
-        self.dataset = DataTransformer.merge_data(data_translator=data_translator)
-        self.dataset['race_date'] = pd.to_datetime(self.dataset['race_date'])
-        self.dataset = self.dataset.sort_values(by=['race_date', 'race_id', 'pp'], kind='mergesort')
-        self.dataset.dropna(subset=['fp'], inplace=True)
-        self.dataset['track_direction'] = self.dataset['track_direction'].fillna('Straight')
-        self.dataset.reset_index(drop=True, inplace=True)
+        self.dataset = dataset
 
         self.numerical_features = numerical_features
         self.categorical_features = categorical_features
