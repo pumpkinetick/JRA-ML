@@ -29,7 +29,7 @@ class Evaluator:
         )
 
         self.race_data_split = self.split_by_group(
-            arr=test_df.to_dict('records'),
+            arr=np.array(test_df.to_dict('records')),
             groups=self.test_groups
         )
 
@@ -38,7 +38,7 @@ class Evaluator:
         self.print_importance()
 
     @staticmethod
-    def split_by_group(arr: list | np.ndarray,
+    def split_by_group(arr: np.ndarray,
                        groups: np.ndarray
                        ) -> list:
         splits = list()
@@ -57,15 +57,6 @@ class Evaluator:
                 k=k
             )
             print(f'NDCG@{k}: {score:.4f}')
-
-        winner_accuracy = sum(
-            y_true[np.argmax(y_pred)] == max(y_true)
-            for y_true, y_pred in zip(self.y_true_split, self.y_pred_split)
-        )
-        print(
-            f'Winner correctly predicted: {winner_accuracy}/{len(self.test_groups)} '
-            f'({100*winner_accuracy/len(self.test_groups):.1f}%)\n'
-        )
 
     def print_roi(self,
                   conf_margin: float
