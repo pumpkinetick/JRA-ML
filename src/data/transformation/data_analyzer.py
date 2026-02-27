@@ -13,6 +13,7 @@ class DataAnalyzer:
                  numerical_features: list,
                  categorical_features: list,
                  ordinal_features: list,
+                 ordinal_categories: list,
                  n_races: int = 5,
                  n_days: int = 180
                  ):
@@ -21,6 +22,8 @@ class DataAnalyzer:
         self.numerical_features = numerical_features
         self.categorical_features = categorical_features
         self.ordinal_features = ordinal_features
+
+        self.ordinal_categories = ordinal_categories
 
         calculation_cols = [
             'race_date', 'horse_name', 'horse_weight', 'turf_or_dirt',
@@ -60,8 +63,11 @@ class DataAnalyzer:
                     ('ord', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1))
                 ]), self.categorical_features),
 
-                ('ord', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1),
-                 self.ordinal_features)
+                ('ord', OrdinalEncoder(
+                    categories=self.ordinal_categories,
+                    handle_unknown='use_encoded_value',
+                    unknown_value=-1
+                ), self.ordinal_features)
             ],
             remainder='drop'
         )
