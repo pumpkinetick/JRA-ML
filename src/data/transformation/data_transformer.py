@@ -67,13 +67,7 @@ class DataTransformer:
                 return '4yo_up'
             return 'Mixed'
 
-        class_map = {
-            'Newcomer': 0, 'Maiden': 1,
-            '1-win': 2, '2-win': 3, '3-win': 4,
-            'Open': 5, 'Other': 2
-        }
-        new_cols['race_class_rank'] = self.dataset['race_cond'].apply(get_class).map(class_map)
-
+        new_cols['race_class_rank'] = self.dataset['race_cond'].apply(get_class)
         new_cols['race_age_limit'] = self.dataset['race_cond'].apply(get_age_limit)
 
         self.dataset.drop(columns=['race_cond'], inplace=True)
