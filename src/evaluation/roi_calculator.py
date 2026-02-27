@@ -47,6 +47,7 @@ class ROICalculator:
 
         if total_bets == 0:
             print('No bets met the confidence threshold.\n')
+            return
 
         roi = (total_payout / total_bets) * 100
         print(f'Total Bets: {total_bets} (out of {len(race_data_split)} races)')
