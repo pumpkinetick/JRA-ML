@@ -73,7 +73,9 @@ class ROICalculator:
             payout_fn=lambda horses, _: horses[0].get('win_odds', 0.0)
         )
 
-    def calculate_confidence_roi(self, conf_margin: float = 0.8):
+    def calculate_confidence_roi(self,
+                                 conf_margin: float = 0.8
+                                 ):
         self.run_simulation(
             name=f'Confidence Strategy (Margin > {conf_margin})',
             k=2,
@@ -87,7 +89,7 @@ class ROICalculator:
             name='Place Strategy (Top 1 finishes in Top 3)',
             k=1,
             success_fn=lambda horses: horses[0]['fp'] in [1, 2, 3],
-            payout_fn=lambda horses, _: horses[0].get('place_1_odds', 0.0)
+            payout_fn=lambda horses, _: horses[0].get('place_1_odds', 0.0) / 100
         )
 
     def calculate_trio_roi(self):
@@ -95,5 +97,5 @@ class ROICalculator:
             name='Trio Strategy (Top 3 are 1st, 2nd, 3rd)',
             k=3,
             success_fn=lambda horses: {h['fp'] for h in horses} == {1, 2, 3},
-            payout_fn=lambda _, race: race[0].get('trio_1_odds', 0.0)
+            payout_fn=lambda _, race: race[0].get('trio_1_odds', 0.0) / 100
         )
