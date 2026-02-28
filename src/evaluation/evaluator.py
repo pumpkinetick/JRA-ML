@@ -62,15 +62,14 @@ class Evaluator:
                   conf_margin: float
                   ):
         print('=== Betting Simulation ===')
-        ROICalculator.calculate_flat_bet_roi(
+        roi_calculator = ROICalculator(
             y_pred_split=self.y_pred_split,
             race_data_split=self.race_data_split
         )
-        ROICalculator.calculate_confidence_roi(
-            y_pred_split=self.y_pred_split,
-            race_data_split=self.race_data_split,
-            conf_margin=conf_margin
-        )
+        roi_calculator.calculate_flat_bet_roi()
+        roi_calculator.calculate_confidence_roi(conf_margin=conf_margin)
+        roi_calculator.calculate_place_roi()
+        roi_calculator.calculate_trio_roi()
 
     def print_importance(self):
         print('=== Feature Importances ===')
