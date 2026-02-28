@@ -17,11 +17,11 @@ class HistFeatureGenerator:
 
         historical_features['horse_race_count'] = horse_grouping.cumcount()
 
+        surf_stats = dict()
         for surface in ['Turf', 'Dirt']:
-            col_name = f'horse_avg_fp_{surface.lower()}'
-
             only_surface = df_temp[df_temp['turf_or_dirt'] == surface]
-            surface_stats = (
+
+            s_series = (
                 only_surface.groupby(by='horse_name', observed=True, sort=False)['fp']
                 .rolling(window=n_races, min_periods=1).mean()
                 .groupby(by='horse_name', observed=True, sort=False).shift(1)
@@ -29,10 +29,20 @@ class HistFeatureGenerator:
                 .sort_index()
             )
 
-            historical_features[col_name] = pd.Series(index=df_temp.index, data=np.nan)
-            historical_features[col_name].update(surface_stats)
+            full_series = pd.Series(index=df_temp.index, data=np.nan)
+            full_series.update(s_series)
+            surf_stats[surface] = full_series.groupby(df_temp['horse_name']).ffill()
 
-            historical_features[col_name] = historical_features[col_name].groupby(df_temp['horse_name']).ffill()
+        historical_features['horse_avg_fp_target_surf'] = np.where(
+            df_temp['turf_or_dirt'] == 'Turf',
+            surf_stats['Turf'],
+            surf_stats['Dirt']
+        )
+        historical_features['horse_avg_fp_other_surf'] = np.where(
+            df_temp['turf_or_dirt'] == 'Turf',
+            surf_stats['Dirt'],
+            surf_stats['Turf']
+        )
 
         def get_rel_rolling(target_col: str,
                             window: int
