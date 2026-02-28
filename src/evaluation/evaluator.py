@@ -57,6 +57,7 @@ class Evaluator:
                 k=k
             )
             print(f'NDCG@{k}: {score:.4f}')
+        print('\n')
 
     def print_roi(self,
                   conf_margin: float
