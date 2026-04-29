@@ -10,8 +10,7 @@ class Evaluator:
     def __init__(self,
                  model_trainer: ModelTrainer,
                  model: lgb.LGBMRanker,
-                 test_df: pd.DataFrame,
-                 conf_margin: float = 0.8
+                 test_df: pd.DataFrame
                  ):
         self.model = model
         self.test_groups = model_trainer.test_groups
@@ -33,10 +32,6 @@ class Evaluator:
             groups=self.test_groups
         )
 
-        self.print_score()
-        self.print_roi(conf_margin=conf_margin)
-        self.print_importance()
-
     @staticmethod
     def split_by_group(arr: np.ndarray,
                        groups: np.ndarray
@@ -48,40 +43,40 @@ class Evaluator:
             idx += size
         return splits
 
-    def print_score(self):
-        print('=== Ranking Performance ===')
+    def get_ndcg_stats(self) -> dict:
+        stats = dict()
         for k in [1, 3, 5]:
             score = self.ndcg_at_k(
                 y_true_groups=self.y_true_split,
                 y_pred_groups=self.y_pred_split,
                 k=k
             )
-            print(f'NDCG@{k}: {score:.4f}')
-        print('\n')
+            stats[f'NDCG@{k}'] = score
+        return stats
 
-    def print_roi(self,
-                  conf_margin: float
-                  ):
-        print('=== Betting Simulation ===')
+    def get_roi_stats(self,
+                      conf_margin: float
+                      ) -> dict:
         roi_calculator = ROICalculator(
             y_pred_split=self.y_pred_split,
             race_data_split=self.race_data_split
         )
-        roi_calculator.calculate_flat_bet_roi()
-        roi_calculator.calculate_confidence_roi(conf_margin=conf_margin)
-        roi_calculator.calculate_place_roi()
-        roi_calculator.calculate_trio_roi()
+        return {
+            'Flat Betting Strategy (#1 Pick)': roi_calculator.calculate_flat_bet_roi(),
+            f'Confidence Strategy (Margin > {conf_margin})': (
+                roi_calculator.calculate_confidence_roi(conf_margin=conf_margin)
+            ),
+            'Place Strategy (Top 1 finishes in Top 3)': roi_calculator.calculate_place_roi(),
+            'Trio Strategy (Top 3 are 1st, 2nd, 3rd)': roi_calculator.calculate_trio_roi()
+        }
 
-    def print_importance(self):
-        print('=== Feature Importances ===')
+    def get_importance_stats(self) -> pd.DataFrame:
         feature_names = self.pipeline.get_feature_names_out()
         importance_df = pd.DataFrame({
             'feature': feature_names,
             'importance': self.model.feature_importances_
         }).sort_values(by='importance', ascending=False)
-
-        for row in importance_df.iterrows():
-            print(f'{row[1]["feature"]}: {row[1]["importance"]:.4f}')
+        return importance_df
 
     @staticmethod
     def ndcg_at_k(y_true_groups: list,

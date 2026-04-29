@@ -12,12 +12,11 @@ class ROICalculator:
         self.race_data_split = race_data_split
 
     def run_simulation(self,
-                       name: str,
                        k: int,
                        success_fn: Callable,
                        payout_fn: Callable,
                        filter_fn: Optional[Callable] = None
-                       ):
+                       ) -> dict:
         total_races = len(self.race_data_split)
         total_bets = 0
         total_payout = 0.0
@@ -40,34 +39,20 @@ class ROICalculator:
                 wins += 1
                 total_payout += payout_fn(top_horses, race_data)
 
-        self.print_results(
-            name=name,
-            total_bets=total_bets,
-            total_races=total_races,
-            wins=wins,
-            total_payout=total_payout
-        )
+        roi = (total_payout / total_bets * 100) if total_bets > 0 else 0.0
+        win_rate = (wins / total_bets * 100) if total_bets > 0 else 0.0
 
-    @staticmethod
-    def print_results(name: str,
-                      total_bets: int,
-                      total_races: int,
-                      wins: int,
-                      total_payout: float
-                      ):
-        print(f'--- {name} ---')
-        if total_bets == 0:
-            print("No bets met the criteria.\n")
-            return
+        return {
+            'total_bets': total_bets,
+            'total_races': total_races,
+            'wins': wins,
+            'total_payout': total_payout,
+            'roi': roi,
+            'win_rate': win_rate
+        }
 
-        roi = (total_payout / total_bets) * 100
-        win_rate = (wins / total_bets) * 100
-        print(f'Total Bets: {total_bets} (out of {total_races} races) | Wins: {wins}')
-        print(f'Total Payout: {total_payout:.1f} | ROI: {roi:.2f}% | Win Rate: {win_rate:.2f}%\n')
-
-    def calculate_flat_bet_roi(self):
-        self.run_simulation(
-            name='Flat Betting Strategy (#1 Pick)',
+    def calculate_flat_bet_roi(self) -> dict:
+        return self.run_simulation(
             k=1,
             success_fn=lambda horses: horses[0]['fp'] == 1,
             payout_fn=lambda horses, _: horses[0].get('win_odds', 0.0)
@@ -75,26 +60,23 @@ class ROICalculator:
 
     def calculate_confidence_roi(self,
                                  conf_margin: float = 0.8
-                                 ):
-        self.run_simulation(
-            name=f'Confidence Strategy (Margin > {conf_margin})',
+                                 ) -> dict:
+        return self.run_simulation(
             k=2,
             filter_fn=lambda preds, idx: preds[idx[0]] - preds[idx[1]] > conf_margin,
             success_fn=lambda horses: horses[0]['fp'] == 1,
             payout_fn=lambda horses, _: horses[0].get('win_odds', 0.0)
         )
 
-    def calculate_place_roi(self):
-        self.run_simulation(
-            name='Place Strategy (Top 1 finishes in Top 3)',
+    def calculate_place_roi(self) -> dict:
+        return self.run_simulation(
             k=1,
             success_fn=lambda horses: horses[0]['fp'] in [1, 2, 3],
             payout_fn=lambda horses, _: horses[0].get('place_1_odds', 0.0) / 100
         )
 
-    def calculate_trio_roi(self):
-        self.run_simulation(
-            name='Trio Strategy (Top 3 are 1st, 2nd, 3rd)',
+    def calculate_trio_roi(self) -> dict:
+        return self.run_simulation(
             k=3,
             success_fn=lambda horses: {h['fp'] for h in horses} == {1, 2, 3},
             payout_fn=lambda _, race: race[0].get('trio_1_odds', 0.0) / 100

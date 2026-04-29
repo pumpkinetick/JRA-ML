@@ -1,4 +1,6 @@
+import joblib
 import lightgbm as lgb
+from pathlib import Path
 
 from src.training.training_data_preparer import TrainingDataPreparer
 
@@ -16,6 +18,17 @@ class ModelTrainer:
         self.test_groups = training_data_preparer.test_groups
 
         self.pipeline = training_data_preparer.pipeline
+
+    @staticmethod
+    def save_model(model: lgb.LGBMRanker,
+                   path: Path
+                   ):
+        joblib.dump(model, path)
+
+    @staticmethod
+    def load_model(path: Path
+                   ) -> lgb.LGBMRanker:
+        return joblib.load(path)
 
     def fit_model(self,
                   training_args: dict,
