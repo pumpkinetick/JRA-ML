@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Optional
+
 import pandas as pd
 
 from src.data.preparation.data_translator import DataTranslator
@@ -5,12 +8,21 @@ from src.data.preparation.data_translator import DataTranslator
 
 class DataTransformer:
     def __init__(self,
-                 data_translator: DataTranslator
+                 data_translator: Optional[DataTranslator] = None
                  ):
-        self.dataset = self.merge_data(data_translator=data_translator)
+        if data_translator is not None:
+            self.dataset = self.merge_data(data_translator=data_translator)
 
-        self.clean_dataset()
-        self.parse_race_cond()
+            self.clean_dataset()
+            self.parse_race_cond()
+        else:
+            self.dataset = pd.DataFrame()
+
+    def save_dataset(self, path: Path):
+        self.dataset.to_pickle(path)
+
+    def load_dataset(self, path: Path):
+        self.dataset = pd.read_pickle(path)
 
     @staticmethod
     def merge_data(data_translator: DataTranslator

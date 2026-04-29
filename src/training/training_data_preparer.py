@@ -76,7 +76,7 @@ class TrainingDataPreparer:
         return column_transformer
 
     def prepare_training_data(self):
-        self.train_df = self.dataset[self.dataset['race_date'] < self.split_date]
+        self.train_df = self.dataset[self.dataset['race_date'] < self.split_date].copy()
 
         self.train_groups = self.train_df.groupby(by='race_id', sort=True).size().values
 
@@ -86,7 +86,7 @@ class TrainingDataPreparer:
         )
 
     def prepare_test_data(self):
-        self.test_df = self.dataset[self.dataset['race_date'] >= self.split_date]
+        self.test_df = self.dataset[self.dataset['race_date'] >= self.split_date].copy()
 
         self.test_groups = self.test_df.groupby(by='race_id', sort=True).size().values
 
