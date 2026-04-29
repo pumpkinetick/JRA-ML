@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import gdown
 
@@ -8,7 +9,7 @@ from src import PROJECT_PATH
 class DataDownloader:
     def __init__(self,
                  drive_link: str,
-                 data_path: Path = None
+                 data_path: Optional[Path] = None
                  ):
         self.drive_link = drive_link
         self.data_path = data_path

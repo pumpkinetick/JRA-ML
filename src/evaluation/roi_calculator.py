@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
 
@@ -16,7 +16,7 @@ class ROICalculator:
                        k: int,
                        success_fn: Callable,
                        payout_fn: Callable,
-                       filter_fn: Callable = None
+                       filter_fn: Optional[Callable] = None
                        ):
         total_races = len(self.race_data_split)
         total_bets = 0

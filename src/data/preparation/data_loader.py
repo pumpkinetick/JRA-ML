@@ -20,7 +20,5 @@ class DataLoader:
         for file_name in ['corner_passing_orders', 'laptimes', 'odds', 'race_results']:
             setattr(
                 self, file_name,
-                pd.read_csv(
-                    self.data_path / f'{file_name}.csv'
-                )
+                pd.read_csv(filepath_or_buffer=self.data_path / f'{file_name}.csv')
             )

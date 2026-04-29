@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.data.transformation.hist_feature_generator import HistFeatureGenerator
+from src.data.analysis.hist_feature_generator import HistFeatureGenerator
 
 
 class DataAnalyzer:
