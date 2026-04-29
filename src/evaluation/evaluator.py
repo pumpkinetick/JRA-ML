@@ -43,9 +43,13 @@ class Evaluator:
             idx += size
         return splits
 
-    def get_ndcg_stats(self) -> dict:
+    def get_ndcg_stats(self,
+                       k_list: list[int] = None
+                       ) -> dict:
+        if k_list is None:
+            k_list = [1, 3, 5]
         stats = dict()
-        for k in [1, 3, 5]:
+        for k in k_list:
             score = self.ndcg_at_k(
                 y_true_groups=self.y_true_split,
                 y_pred_groups=self.y_pred_split,
