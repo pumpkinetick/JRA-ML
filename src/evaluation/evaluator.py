@@ -68,12 +68,12 @@ class Evaluator:
             race_data_split=self.race_data_split
         )
         return {
-            'Flat Betting Strategy': roi_calculator.calculate_flat_bet_roi(),
-            f'Confidence Strategy (Margin > {conf_margin})': (
+            'Flat Bet': roi_calculator.calculate_flat_bet_roi(),
+            f'Confidence (Margin > {conf_margin})': (
                 roi_calculator.calculate_confidence_roi(conf_margin=conf_margin)
             ),
-            'Place Strategy (Top 1 finishes in Top 3)': roi_calculator.calculate_place_roi(),
-            'Trio Strategy (Top 3 are 1st, 2nd, 3rd)': roi_calculator.calculate_trio_roi()
+            'Place': roi_calculator.calculate_place_roi(),
+            'Trio': roi_calculator.calculate_trio_roi()
         }
 
     def get_importance_stats(self) -> pd.DataFrame:
@@ -119,10 +119,10 @@ class Evaluator:
         years = sorted(year_indices.keys())
 
         strategies = {
-            'Flat Betting Strategy': 'flat',
-            f'Confidence Strategy (Margin > {conf_margin})': 'confidence',
-            'Place Strategy (Top 1 finishes in Top 3)': 'place',
-            'Trio Strategy (Top 3 are 1st, 2nd, 3rd)': 'trio'
+            'Flat Bet': 'flat',
+            f'Confidence (Margin > {conf_margin})': 'confidence',
+            'Place': 'place',
+            'Trio': 'trio'
         }
 
         cumulative_stats = dict()
