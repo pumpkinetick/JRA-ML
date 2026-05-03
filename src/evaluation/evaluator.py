@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
@@ -66,7 +68,7 @@ class Evaluator:
             race_data_split=self.race_data_split
         )
         return {
-            'Flat Betting Strategy (#1 Pick)': roi_calculator.calculate_flat_bet_roi(),
+            'Flat Betting Strategy': roi_calculator.calculate_flat_bet_roi(),
             f'Confidence Strategy (Margin > {conf_margin})': (
                 roi_calculator.calculate_confidence_roi(conf_margin=conf_margin)
             ),
@@ -105,3 +107,57 @@ class Evaluator:
 
             scores.append(dcg / idcg if idcg > 0 else 0.0)
         return float(np.mean(scores))
+
+    def get_roi_time_series(self,
+                            conf_margin: float
+                            ) -> dict:
+        year_indices = defaultdict(list)
+        for i, race in enumerate(self.race_data_split):
+            year = pd.to_datetime(race[0]['race_date']).year
+            year_indices[year].append(i)
+
+        years = sorted(year_indices.keys())
+
+        strategies = {
+            'Flat Betting Strategy': 'flat',
+            f'Confidence Strategy (Margin > {conf_margin})': 'confidence',
+            'Place Strategy (Top 1 finishes in Top 3)': 'place',
+            'Trio Strategy (Top 3 are 1st, 2nd, 3rd)': 'trio'
+        }
+
+        cumulative_stats = dict()
+        for strategy_name, strategy_key in strategies.items():
+            cumulative_bets = 0
+            cumulative_payout = 0.0
+
+            roi_over_time = list()
+            for year in years:
+                indices = year_indices[year]
+                subset_y_pred = [self.y_pred_split[i] for i in indices]
+                subset_race = [self.race_data_split[i] for i in indices]
+
+                roi_calc = ROICalculator(
+                    y_pred_split=subset_y_pred,
+                    race_data_split=subset_race
+                )
+
+                stats = dict()
+                match strategy_key:
+                    case 'flat':
+                        stats = roi_calc.calculate_flat_bet_roi()
+                    case 'confidence':
+                        stats = roi_calc.calculate_confidence_roi(conf_margin=conf_margin)
+                    case 'place':
+                        stats = roi_calc.calculate_place_roi()
+                    case 'trio':
+                        stats = roi_calc.calculate_trio_roi()
+
+                cumulative_bets += stats['total_bets']
+                cumulative_payout += stats['total_payout']
+
+                roi = (cumulative_payout / cumulative_bets * 100) if cumulative_bets > 0 else 0.0
+                roi_over_time.append(roi)
+
+            cumulative_stats[strategy_name] = {'years': years, 'roi': roi_over_time}
+
+        return cumulative_stats

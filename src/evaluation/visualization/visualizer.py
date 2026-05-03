@@ -31,3 +31,15 @@ class Visualizer:
         plt.title('Feature Importance')
         plt.tight_layout()
         plt.show()
+
+    @staticmethod
+    def plot_roi_over_time(cumulative_stats: dict):
+        plt.figure(figsize=(12, 8))
+        for strategy, data in cumulative_stats.items():
+            sns.lineplot(x=data['years'], y=data['roi'], label=strategy)
+        plt.title('Cumulative ROI Over Time')
+        plt.xlabel('Year')
+        plt.ylabel('ROI (%)')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
